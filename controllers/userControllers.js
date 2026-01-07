@@ -103,7 +103,14 @@ export function LoginUser(req, res) {
         res.json({
           token: token,
           message: "Login Successful",
-          role: user.role,
+          message: "Login Successful",
+          user: {
+            _id: user._id,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            email: user.email,
+            role: user.role
+          }
         });
       } else {
         res.status(403).json({ message: "Incorrect Password" });
@@ -145,4 +152,36 @@ export const deleteAdmin = async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: "Failed to delete admin", error });
   }
+};
+
+// Get All Users (for Admin)
+export const getAllUsers = async (req, res) => {
+    try {
+        const users = await User.find({}).sort({ createdAt: -1 });
+        res.json(users);
+    } catch (error) {
+        res.status(500).json({ message: "Error fetching users" });
+    }
+};
+
+// Update User Role
+export const updateUserRole = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { role } = req.body;
+        
+        const updatedUser = await User.findByIdAndUpdate(
+            id, 
+            { role: role },
+            { new: true }
+        );
+        
+        if (!updatedUser) {
+            return res.status(404).json({ message: "User not found" });
+        }
+        
+        res.json({ message: "Role updated", user: updatedUser });
+    } catch (error) {
+        res.status(500).json({ message: "Error updating role" });
+    }
 };
