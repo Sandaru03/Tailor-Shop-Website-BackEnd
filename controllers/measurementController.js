@@ -73,7 +73,7 @@ export const createMeasurement = async (req, res) => {
     res.status(201).json({ message: "Measurement submitted successfully!", data: newMeasurement });
   } catch (error) {
     console.error("Error submitting measurement:", error);
-    res.status(500).json({ message: "Server error during submission" });
+    res.status(500).json({ message: error.message || "Server error during submission" });
   }
 };
 
