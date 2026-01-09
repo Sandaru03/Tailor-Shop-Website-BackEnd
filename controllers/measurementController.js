@@ -1,32 +1,59 @@
 import Measurement from "../models/measurement.js";
 import multer from "multer";
 import path from "path";
-import fs from "fs";
+import { supabase } from "../config/supabase.js";
 
-// Configure Multer Storage
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    const uploadPath = "uploads/measurements";
-    if (!fs.existsSync(uploadPath)) {
-      fs.mkdirSync(uploadPath, { recursive: true });
-    }
-    cb(null, uploadPath);
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    cb(null, file.fieldname + "-" + uniqueSuffix + path.extname(file.originalname));
-  },
-});
-
+// Configure Multer to use Memory Storage
+const storage = multer.memoryStorage();
 export const upload = multer({ storage: storage });
+
+const uploadToSupabase = async (file) => {
+    const timestamp = Date.now();
+    const fileName = `${file.fieldname}-${timestamp}-${Math.round(Math.random() * 1e9)}${path.extname(file.originalname)}`;
+    
+    const { data, error } = await supabase.storage
+        .from('videos')
+        .upload(fileName, file.buffer, {
+            contentType: file.mimetype,
+        });
+
+    if (error) {
+        throw new Error(`Supabase Upload Error: ${error.message}`);
+    }
+
+    const { data: publicUrlData } = supabase.storage
+        .from('videos')
+        .getPublicUrl(fileName);
+        
+    return publicUrlData.publicUrl;
+};
 
 export const createMeasurement = async (req, res) => {
   try {
     const { name, phone, neck, shoulder, chest, waist, hips, sleeve, frontLength, backLength } = req.body;
     
-    // Get file paths if they exist
-    const videoFront = req.files['videoFront'] ? req.files['videoFront'][0].path.replace(/\\/g, "/") : null;
-    const videoBack = req.files['videoBack'] ? req.files['videoBack'][0].path.replace(/\\/g, "/") : null;
+    let videoFrontUrl = null;
+    let videoBackUrl = null;
+
+    // Upload Video Front
+    if (req.files['videoFront'] && req.files['videoFront'][0]) {
+        try {
+            videoFrontUrl = await uploadToSupabase(req.files['videoFront'][0]);
+        } catch (uploadError) {
+            console.error("Error uploading front video:", uploadError);
+            return res.status(500).json({ message: "Failed to upload front video" });
+        }
+    }
+
+    // Upload Video Back
+    if (req.files['videoBack'] && req.files['videoBack'][0]) {
+        try {
+            videoBackUrl = await uploadToSupabase(req.files['videoBack'][0]);
+        } catch (uploadError) {
+            console.error("Error uploading back video:", uploadError);
+            return res.status(500).json({ message: "Failed to upload back video" });
+        }
+    }
 
     const newMeasurement = new Measurement({
       name,
@@ -34,8 +61,8 @@ export const createMeasurement = async (req, res) => {
       measurements: {
         neck, shoulder, chest, waist, hips, sleeve, frontLength, backLength
       },
-      videoFront,
-      videoBack
+      videoFront: videoFrontUrl,
+      videoBack: videoBackUrl
     });
 
     await newMeasurement.save();
@@ -61,7 +88,8 @@ export const deleteMeasurement = async (req, res) => {
         const deleted = await Measurement.findByIdAndDelete(id);
         if (!deleted) return res.status(404).json({ message: "Measurement not found" });
         
-        // Optionally delete files from disk here
+        // Note: For full cleanup, we should also delete files from Supabase here.
+        // But for now keeping it simple as per request.
         
         res.status(200).json({ message: "Measurement deleted" });
     } catch (error) {
