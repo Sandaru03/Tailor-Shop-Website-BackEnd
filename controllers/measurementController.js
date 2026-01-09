@@ -8,6 +8,10 @@ const storage = multer.memoryStorage();
 export const upload = multer({ storage: storage });
 
 const uploadToSupabase = async (file) => {
+    if (!supabase) {
+        throw new Error("Supabase is not configured. Check environment variables.");
+    }
+
     const timestamp = Date.now();
     const fileName = `${file.fieldname}-${timestamp}-${Math.round(Math.random() * 1e9)}${path.extname(file.originalname)}`;
     
