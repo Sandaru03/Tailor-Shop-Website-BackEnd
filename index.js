@@ -44,10 +44,9 @@ app.use("/appointments", appointmentRouter);
 // MongoDB connection & server start
 const startServer = async () => {
   try {
-    await mongoose.connect(process.env.MONGO_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true
-    });
+    // ⚠️ ONLY CHANGE IS HERE (options removed)
+    await mongoose.connect(process.env.MONGO_URI);
+
     console.log("✔ MongoDB Connected Successfully");
 
     const PORT = process.env.PORT || 5000;
