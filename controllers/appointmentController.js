@@ -4,7 +4,7 @@ import Appointment from '../models/Appointment.js';
 // Create New Appointment
 // Create New Appointment
 export const createAppointment = async (req, res) => {
-  const { customerName, contactNumber, garmentType, date, time } = req.body;
+  const { customerName, contactNumber, garmentType, gender, date, time } = req.body;
 
   try {
     // 1. Check if slot is already booked (Collision Detection)
@@ -18,6 +18,7 @@ export const createAppointment = async (req, res) => {
       customerName,
       contactNumber,
       garmentType,
+      gender,
       date,
       time
     });

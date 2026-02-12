@@ -4,6 +4,7 @@ const appointmentSchema = new mongoose.Schema({
   customerName: { type: String, required: true },
   contactNumber: { type: String, required: true },
   garmentType: { type: String, required: true },
+  gender: { type: String, required: true, enum: ['Gents', 'Ladies'] },
   date: { type: String, required: true }, // YYYY-MM-DD
   time: { type: String, required: true }, // HH:MM AM/PM
   createdAt: { type: Date, default: Date.now }

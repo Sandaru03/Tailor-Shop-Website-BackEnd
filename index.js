@@ -19,6 +19,7 @@ import User from "./models/user.js";
 import measurementRouter from "./routers/measurementRouter.js";
 import availabilityRouter from "./routers/availabilityRouter.js";
 import appointmentRouter from "./routers/appointmentRouter.js";
+import productRouter from "./routers/product.js";
 
 // ES Module fix for __dirname
 const __filename = fileURLToPath(import.meta.url);
@@ -40,12 +41,19 @@ app.use("/users", userRouter);
 app.use("/measurements", measurementRouter);
 app.use("/availability", availabilityRouter);
 app.use("/appointments", appointmentRouter);
+app.use("/products", productRouter);
 
+// MongoDB connection & server start
 // MongoDB connection & server start
 const startServer = async () => {
   try {
-    // ⚠️ ONLY CHANGE IS HERE (options removed)
-    await mongoose.connect(process.env.MONGO_URI);
+    console.log("Connecting to MongoDB...");
+    // console.log(`URI: ${process.env.MONGO_URI.split('@')[1]}`); 
+
+    await mongoose.connect(process.env.MONGO_URI, {
+      serverSelectionTimeoutMS: 30000, // Increase timeout to 30s
+      family: 4, 
+    });
 
     console.log("✔ MongoDB Connected Successfully");
 
@@ -54,8 +62,18 @@ const startServer = async () => {
       console.log(`✔ Server running at http://localhost:${PORT}`);
     });
   } catch (error) {
-    console.error("❌ MongoDB Connection Failed", error.message);
-    process.exit(1);
+    console.error("❌ MongoDB Connection Failed");
+    if (error.code === 'ENOTFOUND') {
+      console.error("---------------------------------------------------");
+      console.error("Error: DNS Lookup Failed (ENOTFOUND)");
+      console.error("---------------------------------------------------");
+      console.error("1. Check your internet connection.");
+      console.error("2. If using a VPN, one might be blocking DNS.");
+      console.error("3. Update your Adapter settings to use 8.8.8.8.");
+      console.error("---------------------------------------------------");
+    } else {
+      console.error("Error details:", error.message);
+    }
   }
 };
 
