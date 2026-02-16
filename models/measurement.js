@@ -1,29 +1,35 @@
-import mongoose from "mongoose";
+import { DataTypes } from 'sequelize';
+import { sequelize } from '../config/db.js';
 
-const measurementSchema = new mongoose.Schema(
-  {
-    name: { type: String, required: true },
-    phone: { type: String, required: true },
-    measurements: {
-      neck: String,
-      shoulder: String,
-      chest: String,
-      waist: String,
-      hips: String,
-      sleeve: String,
-      frontLength: String,
-      backLength: String,
+const Measurement = sequelize.define('Measurement', {
+    name: {
+        type: DataTypes.STRING,
+        allowNull: false
     },
-    videoFront: { type: String, default: null }, // Path to uploaded file
-    videoBack: { type: String, default: null },  // Path to uploaded file
+    phone: {
+        type: DataTypes.STRING,
+        allowNull: false
+    },
+    measurements: {
+        type: DataTypes.JSON,
+        allowNull: true,
+        comment: 'Object containing neck, shoulder, chest, etc.'
+    },
+    videoFront: {
+        type: DataTypes.STRING,
+        defaultValue: null
+    },
+    videoBack: {
+        type: DataTypes.STRING,
+        defaultValue: null
+    },
     status: {
-      type: String,
-      enum: ['pending', 'reviewed', 'completed'],
-      default: 'pending'
+        type: DataTypes.ENUM('pending', 'reviewed', 'completed'),
+        defaultValue: 'pending'
     }
-  },
-  { timestamps: true }
-);
+}, {
+    tableName: 'measurements',
+    timestamps: true
+});
 
-const Measurement = mongoose.model("Measurement", measurementSchema);
 export default Measurement;

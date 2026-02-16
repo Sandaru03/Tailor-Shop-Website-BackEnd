@@ -59,7 +59,7 @@ export const createMeasurement = async (req, res) => {
         }
     }
 
-    const newMeasurement = new Measurement({
+    const newMeasurement = await Measurement.create({
       name,
       phone,
       measurements: {
@@ -69,7 +69,6 @@ export const createMeasurement = async (req, res) => {
       videoBack: videoBackUrl
     });
 
-    await newMeasurement.save();
     res.status(201).json({ message: "Measurement submitted successfully!", data: newMeasurement });
   } catch (error) {
     console.error("Error submitting measurement:", error);
@@ -79,7 +78,7 @@ export const createMeasurement = async (req, res) => {
 
 export const getMeasurements = async (req, res) => {
   try {
-    const measurements = await Measurement.find().sort({ createdAt: -1 });
+    const measurements = await Measurement.findAll({ order: [['createdAt', 'DESC']] });
     res.status(200).json(measurements);
   } catch (error) {
     res.status(500).json({ message: "Failed to fetch measurements" });
@@ -89,7 +88,7 @@ export const getMeasurements = async (req, res) => {
 export const deleteMeasurement = async (req, res) => {
     try {
         const { id } = req.params;
-        const deleted = await Measurement.findByIdAndDelete(id);
+        const deleted = await Measurement.destroy({ where: { id: id } });
         if (!deleted) return res.status(404).json({ message: "Measurement not found" });
         
         // Note: For full cleanup, we should also delete files from Supabase here.

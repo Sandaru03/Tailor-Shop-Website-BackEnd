@@ -1,13 +1,36 @@
-import mongoose from 'mongoose';
+import { DataTypes } from 'sequelize';
+import { sequelize } from '../config/db.js';
 
-const appointmentSchema = new mongoose.Schema({
-  customerName: { type: String, required: true },
-  contactNumber: { type: String, required: true },
-  garmentType: { type: String, required: true },
-  gender: { type: String, required: true, enum: ['Gents', 'Ladies'] },
-  date: { type: String, required: true }, // YYYY-MM-DD
-  time: { type: String, required: true }, // HH:MM AM/PM
-  createdAt: { type: Date, default: Date.now }
+const Appointment = sequelize.define('Appointment', {
+    customerName: {
+        type: DataTypes.STRING,
+        allowNull: false
+    },
+    contactNumber: {
+        type: DataTypes.STRING,
+        allowNull: false
+    },
+    garmentType: {
+        type: DataTypes.STRING,
+        allowNull: false
+    },
+    gender: {
+        type: DataTypes.ENUM('Gents', 'Ladies'),
+        allowNull: false
+    },
+    date: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        comment: 'YYYY-MM-DD'
+    },
+    time: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        comment: 'HH:MM AM/PM'
+    }
+}, {
+    tableName: 'appointments',
+    timestamps: true
 });
 
-export default mongoose.model('Appointment', appointmentSchema);
+export default Appointment;

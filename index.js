@@ -4,7 +4,7 @@ dotenv.config(); // load .env variables
 
 import express from "express";
 import cors from "cors";
-import mongoose from "mongoose";
+
 import path from "path";
 import { fileURLToPath } from "url";
 import jwt from "jsonwebtoken";
@@ -44,37 +44,25 @@ app.use("/appointments", appointmentRouter);
 app.use("/products", productRouter);
 
 // MongoDB connection & server start
-// MongoDB connection & server start
+// MySQL connection & server start
+import { connectDB, sequelize } from './config/db.js';
+
 const startServer = async () => {
-  try {
-    console.log("Connecting to MongoDB...");
-    // console.log(`URI: ${process.env.MONGO_URI.split('@')[1]}`); 
+    try {
+        await connectDB();
+        
+        // Sync models (optional: use { force: true } to recreate tables, but be careful with data loss! Use { alter: true } for updates)
+        // For production, use migrations. For now, valid for dev.
+        await sequelize.sync({ alter: true }); 
+        console.log("✔ MySQL synchronized");
 
-    await mongoose.connect(process.env.MONGO_URI, {
-      serverSelectionTimeoutMS: 30000, // Increase timeout to 30s
-      family: 4, 
-    });
-
-    console.log("✔ MongoDB Connected Successfully");
-
-    const PORT = process.env.PORT || 5000;
-    app.listen(PORT, () => {
-      console.log(`✔ Server running at http://localhost:${PORT}`);
-    });
-  } catch (error) {
-    console.error("❌ MongoDB Connection Failed");
-    if (error.code === 'ENOTFOUND') {
-      console.error("---------------------------------------------------");
-      console.error("Error: DNS Lookup Failed (ENOTFOUND)");
-      console.error("---------------------------------------------------");
-      console.error("1. Check your internet connection.");
-      console.error("2. If using a VPN, one might be blocking DNS.");
-      console.error("3. Update your Adapter settings to use 8.8.8.8.");
-      console.error("---------------------------------------------------");
-    } else {
-      console.error("Error details:", error.message);
+        const PORT = process.env.PORT || 5000;
+        app.listen(PORT, () => {
+            console.log(`✔ Server running at http://localhost:${PORT}`);
+        });
+    } catch (error) {
+        console.error("❌ Database Connection Failed", error);
     }
-  }
 };
 
 startServer();

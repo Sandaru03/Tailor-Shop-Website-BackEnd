@@ -1,27 +1,26 @@
-import mongoose from 'mongoose';
+import { DataTypes } from 'sequelize';
+import { sequelize } from '../config/db.js';
 
-const productSchema = new mongoose.Schema({
-  title: {
-    type: String,
-    required: true,
-  },
-  category: {
-    type: String,
-    required: true,
-    enum: ['Hair & Skin Care', 'Ladies Fashion', 'Gents Fashion', 'Bridal & Party Wear', 'Accessories & Cosmetics'], 
-  },
-  year: {
-    type: String, 
-    required: true,
-  },
-  image: {
-    type: String, 
-    required: true,
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
+const Product = sequelize.define('Product', {
+    title: {
+        type: DataTypes.STRING,
+        allowNull: false
+    },
+    category: {
+        type: DataTypes.ENUM('Hair & Skin Care', 'Ladies Fashion', 'Gents Fashion', 'Bridal & Party Wear', 'Accessories & Cosmetics'),
+        allowNull: false
+    },
+    year: {
+        type: DataTypes.STRING,
+        allowNull: false
+    },
+    image: {
+        type: DataTypes.STRING,
+        allowNull: false
+    }
+}, {
+    tableName: 'products',
+    timestamps: true
 });
 
-export default mongoose.model('Product', productSchema);
+export default Product;

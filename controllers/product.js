@@ -9,7 +9,7 @@ const __dirname = path.dirname(__filename);
 // Get all products
 export const getProducts = async (req, res) => {
   try {
-    const products = await Product.find().sort({ createdAt: -1 });
+    const products = await Product.findAll({ order: [['createdAt', 'DESC']] });
     res.json(products);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -26,15 +26,13 @@ export const addProduct = async (req, res) => {
 
   const imagePath = `uploads/${req.file.filename}`; 
 
-  const product = new Product({
-    title,
-    category,
-    year,
-    image: imagePath,
-  });
-
   try {
-    const newProduct = await product.save();
+    const newProduct = await Product.create({
+      title,
+      category,
+      year,
+      image: imagePath,
+    });
     res.status(201).json(newProduct);
   } catch (err) {
     fs.unlink(path.join(__dirname, '..', '..', 'uploads', req.file.filename), (unlinkErr) => {
@@ -47,7 +45,7 @@ export const addProduct = async (req, res) => {
 // Delete a product
 export const deleteProduct = async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id);
+    const product = await Product.findByPk(req.params.id);
     if (!product) {
       return res.status(404).json({ message: 'Product not found' });
     }
@@ -57,7 +55,7 @@ export const deleteProduct = async (req, res) => {
       if (err) console.error("Failed to delete image file:", err);
     });
 
-    await product.deleteOne(); 
+    await product.destroy(); 
     res.json({ message: 'Product deleted' });
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -69,15 +67,16 @@ export const updateProduct = async (req, res) => {
   const productId = req.params.id;
 
   try {
-    let product = await Product.findById(productId);
+    let product = await Product.findByPk(productId);
     if (!product) {
       return res.status(404).json({ message: 'Product not found' });
     }
 
-    // Update text fields
-    product.title = title || product.title;
-    product.category = category || product.category;
-    product.year = year || product.year;
+    // Update fields if they exist
+    const updates = {};
+    if (title) updates.title = title;
+    if (category) updates.category = category;
+    if (year) updates.year = year;
 
     // Handle image update
     if (req.file) {
@@ -89,11 +88,11 @@ export const updateProduct = async (req, res) => {
         });
       }
       // Set new image
-      product.image = `uploads/${req.file.filename}`;
+      updates.image = `uploads/${req.file.filename}`;
     }
 
-    const updatedProduct = await product.save();
-    res.json(updatedProduct);
+    await product.update(updates);
+    res.json(product);
 
   } catch (err) {
     // If error and new file was uploaded, delete it
